@@ -137,3 +137,18 @@ exports.resetPassword = async (req, res, next) => {
     next(err);
   }
 };
+
+exports.me = async (req, res, next) => {
+  try {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) return res.status(401).json({ success: false, message: "Unauthorized" });
+    const tokenService = require("../services/token.service");
+    const decoded = tokenService.verifyAccessToken(token);
+    const User = require("../models/User");
+    const user = await User.findByPk(decoded.id);
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+    res.json({ success: true, message: "User loaded", data: { user: { id: user.id, email: user.email, role: user.role } } });
+  } catch (err) {
+    next(err);
+  }
+};
